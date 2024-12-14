@@ -12,7 +12,7 @@ use crossterm::cursor;
 use md5::{Digest, Md5};
 use rand::{thread_rng, Rng};
 use regex::Regex;
-use reqwest::blocking::Client;
+use reqwest::{blocking::Client, header::USER_AGENT};
 use spinners::{Spinner, Spinners};
 use xmp_toolkit::{xmp_ns::DC, OpenFileOptions, XmpFile, XmpMeta};
 
@@ -57,7 +57,11 @@ pub fn get_tags(client: &Client, boards: &Vec<Booru>, md5sum: &str) -> Option<St
         } = booru;
 
         let full_url = api_url.to_string() + md5sum;
-        let body = match client.get(full_url).send() {
+        let body = match client
+            .get(full_url)
+            .header(USER_AGENT, "curl/7.87.0")
+            .send()
+        {
             Ok(resp) => resp.text().unwrap(),
             Err(e) => {
                 println!(
