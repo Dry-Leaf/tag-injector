@@ -1,19 +1,54 @@
 use std::path::Path;
+use std::str::FromStr;
 use std::sync::LazyLock;
+use std::thread::sleep;
+use std::time::Duration;
 use std::{fs, io};
 
 use crate::{conf::Booru, template::build_xmp};
 
 use colored::Colorize;
+use crossterm::cursor;
 use md5::{Digest, Md5};
+use rand::{thread_rng, Rng};
 use regex::Regex;
 use reqwest::blocking::Client;
-use xmp_toolkit::{xmp_ns::DC, XmpMeta};
+use spinners::{Spinner, Spinners};
+use xmp_toolkit::{xmp_ns::DC, OpenFileOptions, XmpFile, XmpMeta};
 
 static EXTENSION_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"\.[^\.]*+$"#).unwrap());
 static MD5SUM_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"[a-f0-9]{32}$"#).unwrap());
 
+pub fn insert(fpath: &Path, pl: String) {
+    let mut xmp_con = XmpFile::new().unwrap();
+    let xmp_opt = xmp_con.open_file(
+        fpath,
+        OpenFileOptions::default()
+            .for_update()
+            .optimize_file_layout(),
+    );
+    xmp_opt.expect("Xmp Toolkit failed to open file");
+
+    if let Ok(new_xmp) = XmpMeta::from_str(pl.as_ref()) {
+        xmp_con
+            .put_xmp(&new_xmp)
+            .expect("Failed to insert xmp data");
+    }
+
+    xmp_con.close();
+    println!("Tags added\n")
+}
+
 pub fn get_tags(client: &Client, boards: &Vec<Booru>, md5sum: &str) -> Option<String> {
+    let rwait: u64 = thread_rng().gen_range(5..=10);
+
+    crossterm::execute!(std::io::stdout(), cursor::Hide).unwrap();
+    let mut sp = Spinner::new(Spinners::Point, "Hold Tight".into());
+    sleep(Duration::from_secs(rwait));
+
+    sp.stop_with_newline();
+    crossterm::execute!(std::io::stdout(), cursor::Show).unwrap();
+
     for booru in boards {
         let Booru {
             name,
@@ -65,6 +100,7 @@ pub fn process(fpath: &Path) -> Option<String> {
     let xmp_opt = XmpMeta::from_file(fpath);
     if let Ok(xmp_d) = xmp_opt {
         if xmp_d.contains_property(DC, "subject") {
+            println!("Already tagged");
             return None;
         }
     }

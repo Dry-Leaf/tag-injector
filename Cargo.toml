@@ -12,6 +12,9 @@ walkdir = "2.5.0"
 md-5 = "0.10.6"
 colored = "2.1.0"
 serde_regex = "1.1.0"
+rand = "0.8.5"
+spinners = "4.1.1"
+crossterm = "0.28.1"
 
 [dependencies.reqwest]
 version = "0.12.9"
