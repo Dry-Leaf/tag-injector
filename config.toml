@@ -1,9 +1,9 @@
+# Tag Injector Configuration
+
 # Add account details to api_urls if need be
 
-title = "Tag Injector Configuration"
 
-
-[[Booru]]
+[[boards]]
 
     name = 'Gelbooru'
 
@@ -11,7 +11,7 @@ title = "Tag Injector Configuration"
     
     tag_regex = '<tags>(.+)</tags>'
 
-[[Booru]]
+[[boards]]
 
     name = 'Danbooru'
 
@@ -19,7 +19,7 @@ title = "Tag Injector Configuration"
 
     tag_regex = '<tag-string>(.+)</tag-string>'
 
-[[Booru]]
+[[boards]]
 
     name = 'Yandere'
 
