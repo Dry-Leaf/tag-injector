@@ -1,4 +1,5 @@
-A utility to add tags from a booru to image files.
+A utility to add tags from a booru to image files. This allows locally stored images to be searched for 
+based on content.
 
 Uses XMP Dublin Core tags, which Windows is natively capable of reading from JPEG files.
 With the installation of this [dll](https://gitgud.io/nvtelen/xmp_property_extension), 
