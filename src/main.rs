@@ -10,7 +10,7 @@ use argh::FromArgs;
 use reqwest::blocking::Client;
 use std::fs;
 use std::io::Result;
-use std::path::Path;
+use std::path::PathBuf;
 use walkdir::WalkDir;
 
 use colored::Colorize;
@@ -24,7 +24,7 @@ struct Args {
 
     /// file or folder path
     #[argh(positional)]
-    fpath: String,
+    fpath: PathBuf,
 }
 
 fn main() -> Result<()> {
@@ -38,7 +38,7 @@ fn main() -> Result<()> {
 
     let args: Args = argh::from_env();
 
-    let target_path = Path::new(&args.fpath);
+    let target_path = fs::canonicalize(args.fpath)?;
     if !target_path.exists() {
         println!("{}", "No such file or directory".red());
         return Ok(());
@@ -78,7 +78,7 @@ fn main() -> Result<()> {
             }
         }
     } else {
-        conveyor!(target_path);
+        conveyor!(&target_path);
     }
 
     Ok(())

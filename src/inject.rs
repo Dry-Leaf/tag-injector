@@ -100,7 +100,7 @@ pub fn process(fpath: &Path) -> Option<String> {
     let xmp_opt = XmpMeta::from_file(fpath);
     if let Ok(xmp_d) = xmp_opt {
         if xmp_d.contains_property(DC, "subject") {
-            println!("Already tagged");
+            println!("Already tagged\n");
             return None;
         }
     }
