@@ -1,32 +1,36 @@
 use std::fs;
 
-use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::Deserialize;
 use toml;
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Booru {
-    name: String,
-    api_url: String,
+    pub name: String,
+    pub api_url: String,
     #[serde(with = "serde_regex")]
-    tag_regex: Regex,
+    pub tag_regex: Regex,
 }
 
-static CONFIG: Lazy<Result<Vec<Booru>, String>> = Lazy::new(|| {
+#[derive(Deserialize, Debug)]
+struct BooruVec {
+    boards: Vec<Booru>,
+}
+
+pub fn load_conf() -> Result<Vec<Booru>, String> {
     let conf_str = match fs::read_to_string("config.toml") {
         Ok(c) => c,
         Err(_) => {
-            return Err(String::from("Could not read config.toml"));
+            return Err("Could not read config.toml: ".into());
         }
     };
 
-    let conf: Vec<Booru> = match toml::from_str(&conf_str) {
+    let conf: BooruVec = match toml::from_str(&conf_str) {
         Ok(d) => d,
-        Err(_) => {
-            return Err(String::from("Could not deserialize config.toml"));
+        Err(e) => {
+            return Err("Could not deserialize config.toml: ".to_string() + e.message());
         }
     };
 
-    Ok(conf)
-});
+    Ok(conf.boards)
+}
