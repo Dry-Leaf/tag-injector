@@ -90,7 +90,6 @@ pub fn process(fpath: &Path, overwrite: bool) -> Option<String> {
     };
 
     if !matches!(ext.as_ref(), ".jpg" | ".jpeg" | ".png" | ".gif" | ".jxl") {
-        println!("Bad ext Current file: {}", fname);
         return None;
     }
 
