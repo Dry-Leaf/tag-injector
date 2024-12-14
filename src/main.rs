@@ -22,6 +22,10 @@ struct Args {
     #[argh(switch, short = 'r')]
     recurse: bool,
 
+    /// allow overwriting tags
+    #[argh(switch, short = 'o')]
+    overwrite: bool,
+
     /// file or folder path
     #[argh(positional)]
     fpath: PathBuf,
@@ -52,7 +56,7 @@ fn main() -> Result<()> {
 
     macro_rules! conveyor {
         ($epath:expr) => {
-            if let Some(hash) = process($epath) {
+            if let Some(hash) = process($epath, args.overwrite) {
                 if let Some(pl) = get_tags(&client, &booru_vec, hash.as_ref()) {
                     insert($epath, pl);
                 }

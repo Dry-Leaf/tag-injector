@@ -80,7 +80,7 @@ pub fn get_tags(client: &Client, boards: &Vec<Booru>, md5sum: &str) -> Option<St
     None
 }
 
-pub fn process(fpath: &Path) -> Option<String> {
+pub fn process(fpath: &Path, overwrite: bool) -> Option<String> {
     let fname = fpath.file_name().unwrap().to_str().unwrap();
 
     let ext_opt = EXTENSION_REGEX.find(fname);
@@ -97,11 +97,13 @@ pub fn process(fpath: &Path) -> Option<String> {
     println!("Current file: {}", fname);
 
     // checking if file already has tags
-    let xmp_opt = XmpMeta::from_file(fpath);
-    if let Ok(xmp_d) = xmp_opt {
-        if xmp_d.contains_property(DC, "subject") {
-            println!("Already tagged\n");
-            return None;
+    if !overwrite {
+        let xmp_opt = XmpMeta::from_file(fpath);
+        if let Ok(xmp_d) = xmp_opt {
+            if xmp_d.contains_property(DC, "subject") {
+                println!("Already tagged\n");
+                return None;
+            }
         }
     }
 
