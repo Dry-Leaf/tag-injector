@@ -54,11 +54,14 @@ fn main() -> Result<()> {
         .build()
         .unwrap();
 
+    let mut pf_vec = Vec::new();
     macro_rules! conveyor {
         ($epath:expr) => {
             if let Some(hash) = process($epath, args.overwrite) {
                 if let Some(pl) = get_tags(&client, &booru_vec, hash.as_ref()) {
-                    insert($epath, pl);
+                    if let Some(put_failure) = insert($epath, pl) {
+                        pf_vec.push(put_failure)
+                    };
                 }
             }
         };
@@ -83,6 +86,10 @@ fn main() -> Result<()> {
         }
     } else {
         conveyor!(&target_path);
+    }
+
+    for pf in pf_vec {
+        println!("{}", pf.red());
     }
 
     Ok(())

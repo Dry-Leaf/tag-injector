@@ -12,14 +12,14 @@ use crossterm::cursor;
 use md5::{Digest, Md5};
 use rand::{thread_rng, Rng};
 use regex::Regex;
-use reqwest::{blocking::Client, header::USER_AGENT};
+use reqwest::{blocking::Client, header};
 use spinners::{Spinner, Spinners};
 use xmp_toolkit::{xmp_ns::DC, OpenFileOptions, XmpFile, XmpMeta};
 
 static EXTENSION_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"\.[^\.]*+$"#).unwrap());
 static MD5SUM_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"[a-f0-9]{32}$"#).unwrap());
 
-pub fn insert(fpath: &Path, pl: String) {
+pub fn insert(fpath: &Path, pl: String) -> Option<String> {
     let mut xmp_con = XmpFile::new().unwrap();
     let xmp_opt = xmp_con.open_file(
         fpath,
@@ -29,14 +29,27 @@ pub fn insert(fpath: &Path, pl: String) {
     );
     xmp_opt.expect("Xmp Toolkit failed to open file");
 
-    if let Ok(new_xmp) = XmpMeta::from_str(pl.as_ref()) {
-        xmp_con
-            .put_xmp(&new_xmp)
-            .expect("Failed to insert xmp data");
-    }
+    let put_failure = if let Ok(new_xmp) = XmpMeta::from_str(pl.as_ref()) {
+        if let Err(ierr) = xmp_con.put_xmp(&new_xmp) {
+            Some(format!(
+                "Failed to insert xmp data on {}: {}",
+                fpath.to_str().unwrap(),
+                ierr
+            ))
+        } else {
+            None
+        }
+    } else {
+        Some("Failied to form XmpMeta".into())
+    };
 
     xmp_con.close();
-    println!("Tags added\n")
+    if put_failure.is_none() {
+        println!("Tags added\n");
+    } else {
+        println!("Error occured\n");
+    }
+    put_failure
 }
 
 pub fn get_tags(client: &Client, boards: &Vec<Booru>, md5sum: &str) -> Option<String> {
@@ -59,7 +72,8 @@ pub fn get_tags(client: &Client, boards: &Vec<Booru>, md5sum: &str) -> Option<St
         let full_url = api_url.to_string() + md5sum;
         let body = match client
             .get(full_url)
-            .header(USER_AGENT, "curl/7.87.0")
+            .header(header::USER_AGENT, "curl/7.87.0")
+            .header(header::ACCEPT, "text/*")
             .send()
         {
             Ok(resp) => resp.text().unwrap(),
