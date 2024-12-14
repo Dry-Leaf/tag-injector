@@ -19,7 +19,11 @@ use xmp_toolkit::{xmp_ns::DC, OpenFileOptions, XmpFile, XmpMeta};
 static EXTENSION_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"\.[^\.]*+$"#).unwrap());
 static MD5SUM_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"[a-f0-9]{32}$"#).unwrap());
 
-pub fn insert(fpath: &Path, pl: String) -> Option<String> {
+pub fn insert_keyw(_fpath: &Path, _pl: String) -> Option<String> {
+    None
+}
+
+pub fn insert_xmp(fpath: &Path, pl: String) -> Option<String> {
     let mut xmp_con = XmpFile::new().unwrap();
     let xmp_opt = xmp_con.open_file(
         fpath,
@@ -98,7 +102,7 @@ pub fn get_tags(client: &Client, boards: &Vec<Booru>, md5sum: &str) -> Option<St
     None
 }
 
-pub fn process(fpath: &Path, overwrite: bool) -> Option<String> {
+pub fn process(fpath: &Path, overwrite: bool) -> Option<(String, bool)> {
     let fname = fpath.file_name().unwrap().to_str().unwrap();
 
     let ext_opt = EXTENSION_REGEX.find(fname);
@@ -107,19 +111,31 @@ pub fn process(fpath: &Path, overwrite: bool) -> Option<String> {
         None => return None,
     };
 
-    if !matches!(ext.as_ref(), ".jpg" | ".jpeg" | ".png" | ".gif" | ".jxl") {
-        return None;
-    }
+    let vid_switch = match ext.as_ref() {
+        ".jpg" | ".jpeg" | ".png" | ".gif" | ".jxl" => false,
+        ".mp4" => true,
+        _ => {
+            return None;
+        }
+    };
 
     println!("Current file: {}", fname);
 
     // checking if file already has tags
     if !overwrite {
-        let xmp_opt = XmpMeta::from_file(fpath);
-        if let Ok(xmp_d) = xmp_opt {
-            if xmp_d.contains_property(DC, "subject") {
+        if vid_switch {
+            let tag = mp4ameta::Tag::read_from_path(fpath).unwrap();
+            if let Some(_) = tag.keyword() {
                 println!("Already tagged\n");
                 return None;
+            }
+        } else {
+            let xmp_opt = XmpMeta::from_file(fpath);
+            if let Ok(xmp_d) = xmp_opt {
+                if xmp_d.contains_property(DC, "subject") {
+                    println!("Already tagged\n");
+                    return None;
+                }
             }
         }
     }
@@ -138,5 +154,5 @@ pub fn process(fpath: &Path, overwrite: bool) -> Option<String> {
         &format!("{:x}", hasher.finalize())
     };
 
-    return Some(md5sum.to_string());
+    return Some((md5sum.to_string(), vid_switch));
 }
