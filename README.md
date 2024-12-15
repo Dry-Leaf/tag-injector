@@ -2,7 +2,7 @@ A utility to add tags from a booru to their common image formats(JPEG, PNG, GIF)
 This allows locally stored images to be searched for based on content.
 
 Uses XMP Dublin Core tags, which Windows is natively capable of reading from JPEG files.
-With the installation of [this dll](https://gitgud.io/nvtelen/xmp_property_extension), 
+With the installation of [this dll](https://github.com/Dry-Leaf/xmp_property_extension),
 reading support is added to PNG, GIF and JXL files. 
 
 ## Usage
