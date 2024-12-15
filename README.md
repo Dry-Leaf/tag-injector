@@ -1,4 +1,4 @@
-A utility to add tags from a booru to their most common file formats(JPEG, PNG, GIF). 
+A utility to add tags from a booru to their common image formats(JPEG, PNG, GIF). 
 This allows locally stored images to be searched for based on content.
 
 Uses XMP Dublin Core tags, which Windows is natively capable of reading from JPEG files.
